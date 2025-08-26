@@ -117,7 +117,13 @@ async def render_mashup_streamer(plan: Dict, songs: List[Dict], job_id: str):
                 # y, _ = load_wav(stem_bytes, sr=sr)
 
                 # TODO: Implement more advanced segment selection
-                segment = y[:, :section_len_samples]
+                # The current implementation does not yet fetch real stem audio
+                # data. To keep the service functional while that pipeline is
+                # being built, use a placeholder of silence for each layer. This
+                # avoids a NameError from referencing an undefined variable and
+                # allows the rendering loop to execute without external
+                # dependencies.
+                segment = np.zeros((2, section_len_samples), dtype=np.float32)
 
                 # Apply effects, pitch, volume, etc.
                 # This logic would be much more detailed in a full implementation

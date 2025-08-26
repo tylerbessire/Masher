@@ -74,8 +74,14 @@ def calculate_spectral_breakdown(s1, s2):
     mfcc2 = np.array(s2['mfccs']).mean(axis=1)
     mfcc_sim = 1 - cosine(mfcc1, mfcc2)
 
-    brightness_compat = 1 - abs(s1['brightness'] - s2['brightness']) / max(s1['brightness'], s2['brightness'])
-    range_compat = 1 - abs(s1['dynamic_range'] - s2['dynamic_range']) / max(s1['dynamic_range'], s2['dynamic_range'])
+    # Guard against division by zero when either track has zero brightness or
+    # dynamic range. In such cases we treat the denominator as a very small
+    # number to maintain stability of the compatibility metrics.
+    brightness_denominator = max(s1['brightness'], s2['brightness'], 1e-9)
+    brightness_compat = 1 - abs(s1['brightness'] - s2['brightness']) / brightness_denominator
+
+    range_denominator = max(s1['dynamic_range'], s2['dynamic_range'], 1e-9)
+    range_compat = 1 - abs(s1['dynamic_range'] - s2['dynamic_range']) / range_denominator
 
     score = np.average([mfcc_sim, brightness_compat, range_compat], weights=[0.5, 0.25, 0.25]) * 100
     return {
