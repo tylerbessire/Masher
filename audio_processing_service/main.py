@@ -83,21 +83,18 @@ async def render_mashup_streamer(plan: Dict, songs: List[Dict], job_id: str):
         return f"data: {json.dumps({'progress': progress, 'message': message})}\n\n"
 
     try:
-        # 1. Get stems for all songs
+        # 1. Load audio for all songs
         tracks_data = {}
         for song in songs:
             song_id = song['song_id']
-            yield progress_update(f"Separating stems for {song_id}...", 1)
+            yield progress_update(f"Loading audio for {song_id}...", 1)
 
-            # Get a temporary public URL for the audio file
-            # signed_url_res = supabase_client.storage.from_('mashups').create_signed_url(song['storage_path'], 60)
-            # audio_url = signed_url_res['data']['signedURL']
+            audio_path = song.get('storage_path')
+            if not audio_path or not os.path.exists(audio_path):
+                raise FileNotFoundError(f"Audio file for {song_id} not found at {audio_path}")
 
-            # stems_result = invoke_supabase_function('stem-separation', {'audio_url': audio_url, 'job_id': job_id})
-            # if not stems_result.get('success'):
-            #     raise Exception(f"Stem separation failed for {song_id}")
-
-            # tracks_data[song_id] = { "stems": stems_result['stems'], "analysis": song['analysis'] }
+            y, _ = load_wav(audio_path, sr=sr)
+            tracks_data[song_id] = {"stems": {"mix": y}, "analysis": song.get('analysis', {})}
             await asyncio.sleep(0.1)
 
         # 2. Render each section
@@ -110,20 +107,16 @@ async def render_mashup_streamer(plan: Dict, songs: List[Dict], job_id: str):
 
             for layer in section.get('layers', []):
                 song_id = layer['songId']
-                stem_name = layer['stem']
+                stem_name = layer.get('stem', 'mix')
 
-                # stem_path = tracks_data[song_id]['stems'][stem_name]
-                # stem_bytes = supabase_client.storage.from_('mashups').download(stem_path)
-                # y, _ = load_wav(stem_bytes, sr=sr)
+                y = tracks_data.get(song_id, {}).get('stems', {}).get(stem_name)
+                if y is None:
+                    raise ValueError(f"Stem {stem_name} not found for {song_id}")
 
-                # TODO: Implement more advanced segment selection
-                # The current implementation does not yet fetch real stem audio
-                # data. To keep the service functional while that pipeline is
-                # being built, use a placeholder of silence for each layer. This
-                # avoids a NameError from referencing an undefined variable and
-                # allows the rendering loop to execute without external
-                # dependencies.
-                segment = np.zeros((2, section_len_samples), dtype=np.float32)
+                start_sec = layer.get('start_sec', 0)
+                start_sample = int(start_sec * sr)
+                end_sample = start_sample + section_len_samples
+                segment = y[:, start_sample:end_sample]
 
                 # Apply effects, pitch, volume, etc.
                 # This logic would be much more detailed in a full implementation
