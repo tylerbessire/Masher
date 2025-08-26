@@ -1,0 +1,10 @@
+# Web Server
+fastapi
+uvicorn
+
+# Data Validation
+pydantic
+
+# Numerics
+numpy
+scipy

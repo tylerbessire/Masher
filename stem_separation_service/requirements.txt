@@ -1,0 +1,16 @@
+# Web Server
+fastapi
+uvicorn
+
+# Data Validation
+pydantic
+
+# Supabase & HTTP
+supabase
+requests
+
+# ML & Audio
+torch
+torchaudio
+demucs
+soundfile

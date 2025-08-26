@@ -1,0 +1,25 @@
+# Web Server
+fastapi==0.104.1
+uvicorn==0.24.0
+python-multipart==0.0.6
+httpx==0.25.2
+
+# ML / Audio
+librosa==0.10.1
+soundfile==0.12.1
+numpy>=1.24.3
+scipy<1.13.0,>=1.11.4
+essentia==2.1b6.dev1389
+pyrubberband>=0.4.0
+demucs
+torch
+torchaudio
+
+# Supabase
+supabase
+
+# Data Validation
+pydantic
+
+# Environment Variables
+python-dotenv

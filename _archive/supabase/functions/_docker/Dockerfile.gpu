@@ -1,0 +1,38 @@
+# CUDA runtime for Demucs + Rubberband + FFmpeg
+FROM nvidia/cuda:12.1.1-runtime-ubuntu22.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8
+
+# System deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip python3-dev build-essential \
+    ffmpeg sox rubberband-cli libsndfile1 git curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Optional: precise rubberband (CLI already installed above), keep it simple.
+
+# Create app dir
+WORKDIR /srv
+
+# Requirements first for layer caching
+COPY supabase/functions/_docker/requirements.txt /srv/requirements.txt
+RUN pip3 install --upgrade pip && pip3 install -r /srv/requirements.txt
+
+# Copy workers/functions
+# (Only copy what’s needed at runtime to keep the image small)
+COPY supabase/functions/stem-separation /srv/stem-separation
+COPY supabase/functions/spectral-analysis /srv/spectral-analysis
+COPY supabase/functions/generate-mashup /srv/generate-mashup
+COPY supabase/functions/common /srv/common
+
+# Healthcheck: a tiny script that imports torch+demucs+librosa and exits 0
+COPY supabase/functions/_docker/healthcheck.py /srv/healthcheck.py
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=5 \
+  CMD python3 /srv/healthcheck.py || exit 1
+
+# Default entrypoint is your worker supervisor; you can override per task
+CMD ["bash", "-lc", "sleep infinity"]
