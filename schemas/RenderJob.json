@@ -1,0 +1,265 @@
+{
+  "$defs": {
+    "Alignment": {
+      "additionalProperties": false,
+      "properties": {
+        "offset_ms": {
+          "title": "Offset Ms",
+          "type": "integer"
+        },
+        "stretch_cents": {
+          "title": "Stretch Cents",
+          "type": "number"
+        }
+      },
+      "required": [
+        "offset_ms",
+        "stretch_cents"
+      ],
+      "title": "Alignment",
+      "type": "object"
+    },
+    "CompSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "threshold_db": {
+          "title": "Threshold Db",
+          "type": "number"
+        },
+        "ratio": {
+          "title": "Ratio",
+          "type": "number"
+        },
+        "attack_ms": {
+          "title": "Attack Ms",
+          "type": "number"
+        },
+        "release_ms": {
+          "title": "Release Ms",
+          "type": "number"
+        }
+      },
+      "required": [
+        "threshold_db",
+        "ratio",
+        "attack_ms",
+        "release_ms"
+      ],
+      "title": "CompSettings",
+      "type": "object"
+    },
+    "DuckingSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "threshold_db": {
+          "title": "Threshold Db",
+          "type": "number"
+        },
+        "ratio": {
+          "title": "Ratio",
+          "type": "number"
+        }
+      },
+      "required": [
+        "enabled",
+        "threshold_db",
+        "ratio"
+      ],
+      "title": "DuckingSettings",
+      "type": "object"
+    },
+    "EqBand": {
+      "additionalProperties": false,
+      "properties": {
+        "frequency_hz": {
+          "title": "Frequency Hz",
+          "type": "number"
+        },
+        "gain_db": {
+          "title": "Gain Db",
+          "type": "number"
+        },
+        "q": {
+          "title": "Q",
+          "type": "number"
+        }
+      },
+      "required": [
+        "frequency_hz",
+        "gain_db",
+        "q"
+      ],
+      "title": "EqBand",
+      "type": "object"
+    },
+    "EqSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "bands": {
+          "items": {
+            "$ref": "#/$defs/EqBand"
+          },
+          "title": "Bands",
+          "type": "array"
+        }
+      },
+      "title": "EqSettings",
+      "type": "object"
+    },
+    "FxSettings": {
+      "additionalProperties": false,
+      "properties": {
+        "ducking": {
+          "$ref": "#/$defs/DuckingSettings"
+        },
+        "eq": {
+          "$ref": "#/$defs/EqSettings"
+        },
+        "comp": {
+          "$ref": "#/$defs/CompSettings"
+        }
+      },
+      "required": [
+        "ducking",
+        "eq",
+        "comp"
+      ],
+      "title": "FxSettings",
+      "type": "object"
+    },
+    "KeyStrategy": {
+      "additionalProperties": false,
+      "properties": {
+        "pitch_shift_semitones": {
+          "title": "Pitch Shift Semitones",
+          "type": "number"
+        }
+      },
+      "required": [
+        "pitch_shift_semitones"
+      ],
+      "title": "KeyStrategy",
+      "type": "object"
+    },
+    "MashPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "pair_id": {
+          "title": "Pair Id",
+          "type": "string"
+        },
+        "alignment": {
+          "$ref": "#/$defs/Alignment"
+        },
+        "key_strategy": {
+          "$ref": "#/$defs/KeyStrategy"
+        },
+        "stems_strategy": {
+          "title": "Stems Strategy",
+          "type": "string"
+        },
+        "structure_map": {
+          "title": "Structure Map",
+          "type": "string"
+        },
+        "fx": {
+          "$ref": "#/$defs/FxSettings"
+        }
+      },
+      "required": [
+        "pair_id",
+        "alignment",
+        "key_strategy",
+        "stems_strategy",
+        "structure_map",
+        "fx"
+      ],
+      "title": "MashPlan",
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "tool_versions": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Tool Versions",
+          "type": "object"
+        },
+        "seeds": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Seeds",
+          "type": "object"
+        },
+        "timestamps": {
+          "additionalProperties": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "title": "Timestamps",
+          "type": "object"
+        },
+        "git_sha": {
+          "title": "Git Sha",
+          "type": "string"
+        }
+      },
+      "required": [
+        "tool_versions",
+        "seeds",
+        "timestamps",
+        "git_sha"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "pair_id": {
+      "title": "Pair Id",
+      "type": "string"
+    },
+    "mash_plan": {
+      "$ref": "#/$defs/MashPlan"
+    },
+    "output_uri": {
+      "title": "Output Uri",
+      "type": "string"
+    },
+    "provenance": {
+      "$ref": "#/$defs/Provenance"
+    },
+    "status": {
+      "enum": [
+        "pending",
+        "running",
+        "completed",
+        "failed"
+      ],
+      "title": "Status",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "pair_id",
+    "mash_plan",
+    "output_uri",
+    "provenance",
+    "status"
+  ],
+  "title": "RenderJob",
+  "type": "object"
+}

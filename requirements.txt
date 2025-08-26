@@ -14,12 +14,20 @@ pyrubberband>=0.4.0
 demucs
 torch
 torchaudio
+pyloudnorm
 
 # Supabase
 supabase
 
 # Data Validation
 pydantic
+jsonschema
+pytest
+
+# Storage
+yt-dlp
+boto3
+moto[s3]
 
 # Environment Variables
 python-dotenv
