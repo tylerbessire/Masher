@@ -5,99 +5,106 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import yt_dlp
 import os
+import re
 
+# --- Configuration ---
+DOWNLOAD_DIR = "downloads"
+os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+
+# --- Pydantic Models ---
+class DownloadRequest(BaseModel):
+    url: str
+
+# --- FastAPI App ---
 app = FastAPI()
-
-# Serve the downloads directory
-if not os.path.exists("downloads"):
-    os.makedirs("downloads")
-app.mount("/downloads", StaticFiles(directory="downloads"), name="downloads")
-
-# Set up CORS
-origins = [
-    "http://localhost:8080",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["http://localhost:8080"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# --- Caching and Download Logic ---
+def sanitize_filename(title):
+    """Remove special characters for a clean filename."""
+    return re.sub(r'[\\/*?:\"<>|]', "", title)
 
+@app.post("/download")
+async def download_audio(request: DownloadRequest):
+    try:
+        # Get video info to get a clean title for the filename
+        with yt_dlp.YoutubeDL({}) as ydl:
+            info = ydl.extract_info(request.url, download=False)
+            title = info.get('title', 'youtube_audio')
+            safe_title = sanitize_filename(title)
+            
+        # Check if the file already exists (simple cache)
+        for ext in ['.mp3', '.m4a', '.webm']:
+            cached_file = os.path.join(DOWNLOAD_DIR, f"{safe_title}{ext}")
+            if os.path.exists(cached_file):
+                print(f"Cache hit: Found existing file {cached_file}")
+                return {
+                    "success": True,
+                    "url": f"http://localhost:7999/{cached_file}",
+                    "message": "Served from cache"
+                }
+
+        # If not cached, download it
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'outtmpl': os.path.join(DOWNLOAD_DIR, f'{safe_title}.%(ext)s'),
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([request.url])
+            # The exact filename is determined by yt-dlp, so we find it
+            final_filename = f"{safe_title}.mp3"
+            final_path = os.path.join(DOWNLOAD_DIR, final_filename)
+
+        if not os.path.exists(final_path):
+             raise HTTPException(status_code=500, detail="Download finished, but the output file was not found.")
+
+        return {
+            "success": True,
+            "url": f"http://localhost:7999/{final_path}",
+            "message": "Downloaded successfully"
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# --- Static File Serving ---
+# This allows the frontend to access the downloaded files
+app.mount(f"/{DOWNLOAD_DIR}", StaticFiles(directory=DOWNLOAD_DIR), name="downloads")
+
+# --- Search Endpoint (remains the same) ---
 class SearchRequest(BaseModel):
     query: str
 
-class DownloadRequest(BaseModel):
-    url: str
-
 @app.post("/search")
 async def search_youtube(request: SearchRequest):
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'noplaylist': True,
-        'default_search': f"ytsearch5", # Search for 5 results
-    }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        try:
-            search_results = ydl.extract_info(request.query, download=False).get('entries', [])
-            results = []
-            for item in search_results:
-                results.append({
-                    "id": item.get("id"),
-                    "title": item.get("title"),
-                    "url": item.get("webpage_url"),
-                    "duration": item.get("duration_string"),
-                    "thumbnail": item.get("thumbnail"),
-                })
-            return {"success": True, "results": results}
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/download")
-async def download_song(request: DownloadRequest):
-    # Ensure the downloads directory exists
-    downloads_dir = "downloads"
-    if not os.path.exists(downloads_dir):
-        os.makedirs(downloads_dir)
-
-    # 1. Get info without downloading to determine the final filename
     try:
-        info_opts = {'quiet': True}
-        with yt_dlp.YoutubeDL(info_opts) as ydl:
-            info = ydl.extract_info(request.url, download=False)
-            title = info.get('title', 'untitled')
-            # Create a safe filename and ensure it ends with .mp3
-            safe_title = "".join([c for c in title if c.isalpha() or c.isdigit() or c in (' ', '-')]).rstrip()
-            final_path = os.path.join(downloads_dir, f"{safe_title}.mp3")
-
-        # 2. Check if the file already exists
-        if os.path.exists(final_path):
-            audio_url = f"http://localhost:7999/downloads/{os.path.basename(final_path)}"
-            return {"success": True, "path": final_path, "url": audio_url, "message": "File already exists"}
-
+        with yt_dlp.YoutubeDL({'quiet': True}) as ydl:
+            results = ydl.extract_info(f"ytsearch5:{request.query}", download=False)['entries']
+        
+        processed_results = [{
+            "id": r['id'],
+            "title": r['title'],
+            "url": r['webpage_url'],
+            "duration": r.get('duration_string', 'N/A'),
+            "thumbnail": r['thumbnail']
+        } for r in results]
+        
+        return {"success": True, "results": processed_results}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting video info: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-    # 3. If it doesn't exist, proceed with download and conversion
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'outtmpl': os.path.join(downloads_dir, f"{safe_title}.%(ext)s"),
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }],
-    }
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        try:
-            ydl.extract_info(request.url, download=True)
-            audio_url = f"http://localhost:7999/downloads/{os.path.basename(final_path)}"
-            return {"success": True, "path": final_path, "url": audio_url}
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error during download: {str(e)}")
-
+# --- Main execution ---
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=7999)
