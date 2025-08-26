@@ -107,7 +107,9 @@ const MashupStudio: React.FC = () => {
         body: JSON.stringify({ url: result.url }),
       });
       const data = await response.json();
-      if (!data.success) throw new Error(data.error || 'Download failed');
+      if (!response.ok || !data.success) {
+        throw new Error(data.detail || data.error || 'Download failed');
+      }
 
       const audioBlob = await (await fetch(data.url)).blob();
       const newSong: Song = {
