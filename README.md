@@ -17,6 +17,32 @@
 
 ---
 
+## Development Setup
+
+1. **Install Python deps**
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. **Install Node deps**
+   ```bash
+   npm install
+   ```
+3. **Run the full stack**
+   ```bash
+   ./start-app.sh
+   ```
+
+This script launches background services, the FastAPI app on <http://localhost:8080>, and the React dev server on <http://localhost:5173>. Hit `Ctrl+C` to stop everything.
+
+### Testing
+
+```bash
+PYTHONPATH=. pytest -q
+npm test
+```
+
+---
+
 ## 0) Product Goals
 
 1. **Zero-to-draft:** From two YouTube URLs to a first-pass mashup automatically.
