@@ -23,6 +23,11 @@ supabase
 pydantic
 jsonschema
 pytest
+hypothesis
+schemathesis
+dramatiq
+structlog
+prometheus-client
 
 # Storage
 yt-dlp
