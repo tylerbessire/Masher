@@ -1,0 +1,58 @@
+{
+  "additionalProperties": false,
+  "description": "Metadata and storage info for an acquired track.",
+  "properties": {
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "artist": {
+      "title": "Artist",
+      "type": "string"
+    },
+    "source_url": {
+      "format": "uri",
+      "maxLength": 2083,
+      "minLength": 1,
+      "title": "Source Url",
+      "type": "string"
+    },
+    "storage_uri": {
+      "title": "Storage Uri",
+      "type": "string"
+    },
+    "duration_sec": {
+      "title": "Duration Sec",
+      "type": "number"
+    },
+    "loudness_lufs": {
+      "title": "Loudness Lufs",
+      "type": "number"
+    },
+    "sample_rate": {
+      "title": "Sample Rate",
+      "type": "integer"
+    },
+    "channels": {
+      "title": "Channels",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "artist",
+    "source_url",
+    "storage_uri",
+    "duration_sec",
+    "loudness_lufs",
+    "sample_rate",
+    "channels"
+  ],
+  "title": "Track",
+  "type": "object"
+}

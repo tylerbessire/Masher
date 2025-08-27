@@ -1,0 +1,154 @@
+{
+  "$defs": {
+    "ChordSegment": {
+      "additionalProperties": false,
+      "properties": {
+        "start_ms": {
+          "title": "Start Ms",
+          "type": "integer"
+        },
+        "chord": {
+          "title": "Chord",
+          "type": "string"
+        },
+        "conf": {
+          "title": "Conf",
+          "type": "number"
+        }
+      },
+      "required": [
+        "start_ms",
+        "chord",
+        "conf"
+      ],
+      "title": "ChordSegment",
+      "type": "object"
+    },
+    "KeyInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "pitch_class": {
+          "enum": [
+            "C",
+            "C#",
+            "D",
+            "Eb",
+            "E",
+            "F",
+            "F#",
+            "G",
+            "Ab",
+            "A",
+            "Bb",
+            "B"
+          ],
+          "title": "Pitch Class",
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "major",
+            "minor"
+          ],
+          "title": "Mode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "pitch_class",
+        "mode"
+      ],
+      "title": "KeyInfo",
+      "type": "object"
+    },
+    "Section": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "start_ms": {
+          "title": "Start Ms",
+          "type": "integer"
+        },
+        "end_ms": {
+          "title": "End Ms",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "label",
+        "start_ms",
+        "end_ms"
+      ],
+      "title": "Section",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "bpm": {
+      "title": "Bpm",
+      "type": "number"
+    },
+    "tempo_conf": {
+      "title": "Tempo Conf",
+      "type": "number"
+    },
+    "key": {
+      "$ref": "#/$defs/KeyInfo"
+    },
+    "key_conf": {
+      "title": "Key Conf",
+      "type": "number"
+    },
+    "beatgrid": {
+      "items": {
+        "type": "integer"
+      },
+      "title": "Beatgrid",
+      "type": "array"
+    },
+    "sections": {
+      "items": {
+        "$ref": "#/$defs/Section"
+      },
+      "title": "Sections",
+      "type": "array"
+    },
+    "energy": {
+      "title": "Energy",
+      "type": "number"
+    },
+    "danceability": {
+      "title": "Danceability",
+      "type": "number"
+    },
+    "vocals_presence": {
+      "title": "Vocals Presence",
+      "type": "number"
+    },
+    "chord_segments": {
+      "items": {
+        "$ref": "#/$defs/ChordSegment"
+      },
+      "title": "Chord Segments",
+      "type": "array"
+    }
+  },
+  "required": [
+    "bpm",
+    "tempo_conf",
+    "key",
+    "key_conf",
+    "beatgrid",
+    "sections",
+    "energy",
+    "danceability",
+    "vocals_presence",
+    "chord_segments"
+  ],
+  "title": "Analysis",
+  "type": "object"
+}

@@ -1,0 +1,39 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "tool_versions": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Tool Versions",
+      "type": "object"
+    },
+    "seeds": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Seeds",
+      "type": "object"
+    },
+    "timestamps": {
+      "additionalProperties": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "title": "Timestamps",
+      "type": "object"
+    },
+    "git_sha": {
+      "title": "Git Sha",
+      "type": "string"
+    }
+  },
+  "required": [
+    "tool_versions",
+    "seeds",
+    "timestamps",
+    "git_sha"
+  ],
+  "title": "Provenance",
+  "type": "object"
+}
